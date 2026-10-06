@@ -1,0 +1,52 @@
+# Wolters Kluwer Global Architecture - Environments Configuration
+# EnvSet Integration Pipeline (EU Environments Only)
+
+global:
+  app_name: "EnvSet-Integration-Pipeline"
+  maintenance_mode_api:
+    url: "https://notify-api.wk-ga.internal/api/v1/maintenance"
+    timeout_sec: 10
+  ga_import_adapter:
+    default_mode: "rest_api" # options: rest_api, database, web_scraping
+    rest_api:
+      url: "https://ga-import.wk-ga.internal/api/v1/status"
+    web_scraping:
+      url: "https://ga-import.wk-ga.internal/dashboard/status"
+  timeouts:
+    pci_transformer_log_inactivity_minutes: 30
+    service_start_timeout_sec: 120
+
+environments:
+  STG:
+    hostname: "wkgaeuslpci2ga01"
+    ip: "10.73.144.124"
+    user: "cus01"
+    region: "EU"
+    cdc_reporter_url: "http://10.73.144.124:8080/cdc/packages"
+    pci2ga_url: "http://10.73.144.124:8085"
+    config_path_template: "/ftp/WKNL-LTR/input/staging/config/Env{envset}"
+    delivery_path: "/ftp/WKNL-LTR/input/staging/CMS/immediate_delivery"
+    immediate_path: "/ftp/WKNL-LTR/input/staging/CMS/immediate"
+    pci2ga_bin_path: "/apps/cdc/wknl/pci2ga/bin"
+    pci2ga_config_file: "/apps/cdc/wknl/pci2ga/bin/config-wknl.xml"
+    pci2ga_logs_path: "/export/work/pci2ga/logs"
+    picked_up_path: "/export/work/pci2ga/picked-up"
+    in_progress_path: "/export/work/pci2ga/in-progress"
+    envfiles_path: "/apps/content_ji2a/ipackages/i2a/Envfiles"
+
+  PROD:
+    hostname: "wkgaeuplpci2ga01"
+    ip: "10.85.129.147"
+    user: "cus01"
+    region: "EU"
+    cdc_reporter_url: "http://10.85.129.147:8080/cdc/packages"
+    pci2ga_url: "http://10.85.129.147:8085"
+    config_path_template: "/ftp/WKNL-LTR/input/production/config/Env{envset}"
+    delivery_path: "/ftp/WKNL-LTR/input/production/CMS/immediate_delivery"
+    immediate_path: "/ftp/WKNL-LTR/input/production/CMS/immediate"
+    pci2ga_bin_path: "/apps/cdc/wknl/pci2ga/bin"
+    pci2ga_config_file: "/apps/cdc/wknl/pci2ga/bin/config-wknl.xml"
+    pci2ga_logs_path: "/export/work/pci2ga/logs"
+    picked_up_path: "/export/work/pci2ga/picked-up"
+    in_progress_path: "/export/work/pci2ga/in-progress"
+    envfiles_path: "/apps/content_ji2a/ipackages/i2a/Envfiles"
