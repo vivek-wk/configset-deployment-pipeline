@@ -13,7 +13,7 @@ on:
           - PROD
 
       envset_number:
-        description: "EnvSet / ConfigSet Number (e.g. 1947)"
+        description: "EnvSet / ConfigSet Number"
         required: true
         type: string
 
