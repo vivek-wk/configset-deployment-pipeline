@@ -1,7 +1,7 @@
 # Wolters Kluwer Global Architecture - EnvSet Integration Architecture Document
 
 ## Executive Summary
-This document defines the Solution Architecture and DevOps Engineering Design for the automated **Environment Fileset (EnvSet) Integration Pipeline**. The pipeline automates the end-to-end deployment lifecycle for Wolters Kluwer Global Architecture EU environments (**STG** and **PROD**).
+This document defines the Solution Architecture and DevOps Engineering Design for the automated **Environment Fileset (EnvSet) Integration**. The automation script executes all steps end-to-end for Wolters Kluwer Global Architecture EU environments (**STG** and **PROD**).
 
 ---
 
@@ -9,8 +9,7 @@ This document defines the Solution Architecture and DevOps Engineering Design fo
 
 ```mermaid
 flowchart TD
-    A[User Trigger / GitHub Action UI] --> B[GitHub Action Runner]
-    B --> C[Step 0: Server Mapping Resolver]
+    A[User runs run_all.sh] --> C[Step 0: Server Mapping Resolver]
     C --> D[Step 1: Package & Directory Validation]
     D --> E[Step 2: Enable Maintenance Mode]
     E --> F[Step 3: Update PCI2GA config-wknl.xml]
@@ -43,29 +42,29 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     autonumber
-    actor DevOps as Engineer/Pipeline User
-    participant GHA as GitHub Actions Runner
+    actor DevOps as Engineer/automation User
+    participant Script as run_all.sh
     participant PCI as PCI2GA Server (cus01)
     participant GA as GA Import / IntApp
 
-    DevOps->>GHA: Trigger Workflow / Interactive Script (EnvSet=1947, Env=STG)
-    GHA->>PCI: Step 1: Validate Env1947 directory (CVC, ART, ATS)
-    PCI-->>GHA: Validation Report (SUCCESS)
-    GHA->>PCI: Step 2: Enable Maintenance Mode
-    GHA->>PCI: Step 3: Backup config-wknl.xml & Update <environmentVersion>
-    GHA->>PCI: Step 4: Run ./srv-stop.sh, kill lingering java, run ./srv-start.sh (user cus01)
-    GHA->>PCI: Step 5: Copy CVC package & Record START TIME
-    GHA->>PCI: Step 6: Tail pciTransformer.log until SUCCESS
+    DevOps->>Script: Run Script (EnvSet=1947, Env=STG)
+    Script->>PCI: Step 1: Validate Env1947 directory (CVC, ART, ATS)
+    PCI-->>Script: Validation Report (SUCCESS)
+    Script->>PCI: Step 2: Enable Maintenance Mode
+    Script->>PCI: Step 3: Backup config-wknl.xml & Update <environmentVersion>
+    Script->>PCI: Step 4: Run ./srv-stop.sh, kill lingering java, run ./srv-start.sh (user cus01)
+    Script->>PCI: Step 5: Copy CVC package & Record START TIME
+    Script->>PCI: Step 6: Tail pciTransformer.log until SUCCESS
     opt Auto Recovery Triggered
-        GHA->>PCI: Clean picked-up & in-progress, restart PCI2GA, resubmit CVC
+        Script->>PCI: Clean picked-up & in-progress, restart PCI2GA, resubmit CVC
     end
-    GHA->>PCI: Step 7: Copy and transform ART & ATS
-    GHA->>PCI: Step 8 & 9: Verify EnvFiles and move to Env1947 folder
+    Script->>PCI: Step 7: Copy and transform ART & ATS
+    Script->>PCI: Step 8 & 9: Verify EnvFiles and move to Env1947 folder
     loop Strictly Sequential Import (Part 1 & Part 2)
-        GHA->>GA: Step 10 & 11: Import package and validate status
-        GA-->>GHA: Status (PACK: SUCCESS, IPACK: SUCCESS)
+        Script->>GA: Step 10 & 11: Import package and validate status
+        GA-->>Script: Status (PACK: SUCCESS, IPACK: SUCCESS)
     end
-    GHA->>GHA: Step 12: Calculate Total Duration (Start -> End)
-    GHA->>PCI: Step 2 Cleanup: Disable Maintenance Mode
-    GHA->>DevOps: Step 13: Teams Webhook Notification Summary
+    Script->>Script: Step 12: Calculate Total Duration (Start -> End)
+    Script->>PCI: Step 2 Cleanup: Disable Maintenance Mode
+    Script->>DevOps: Step 13: Teams Webhook Notification Summary
 ```

@@ -1,8 +1,8 @@
 # Wolters Kluwer Global Architecture - Environments Configuration
-# EnvSet Integration Pipeline (EU Environments Only)
+# EnvSet Integration automation (EU Environments Only)
 
 global:
-  app_name: "EnvSet-Integration-Pipeline"
+  app_name: "EnvSet-Integration"
   maintenance_mode_api:
     url: "https://notify-api.wk-ga.internal/api/v1/maintenance"
     timeout_sec: 10

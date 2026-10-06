@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Interactive Main Entry Point for EnvSet Integration Automation Pipeline
+# Interactive Main Entry Point for EnvSet Integration Automation Script
 # Prompts user for Environment (STG or PROD) and ConfigSet / EnvSet Number.
 
 set -euo pipefail
@@ -43,19 +43,19 @@ fi
 
 export ENVIRONMENT ENVSET_NUMBER DRY_RUN
 
-log_info "Starting EnvSet Automation Pipeline..."
+log_info "Starting EnvSet Automation Script..."
 log_info "  Target Environment: ${ENVIRONMENT}"
 log_info "  ConfigSet Number:   ${ENVSET_NUMBER}"
 log_info "  Dry-Run Mode:       ${DRY_RUN}"
 
 # Cleanup Handler on Failure
 cleanup_on_failure() {
-    log_error "Pipeline execution failed! Disabling maintenance mode..."
+    log_error "Script execution failed! Disabling maintenance mode..."
     "${SCRIPT_DIR}/maintenance_mode.sh" "disable" || true
 }
 trap cleanup_on_failure ERR
 
-# Execute Pipeline Steps
+# Execute All Steps Sequentially
 log_info "\n>>> STEP 0: Resolving Server Mapping..."
 "${SCRIPT_DIR}/server_mapping.sh" "${ENVIRONMENT}" "${ENVSET_NUMBER}"
 
@@ -96,5 +96,5 @@ log_info "\n>>> STEP 13: Posting Deployment Summary Notification..."
 "${SCRIPT_DIR}/teams_notification.sh" "SUCCESS"
 
 log_success "\n========================================================================="
-log_success "  EnvSet ${ENVSET_NUMBER} Integration Pipeline Completed SUCCESSFULLY!  "
+log_success "  EnvSet ${ENVSET_NUMBER} Integration Script Completed SUCCESSFULLY!  "
 log_success "========================================================================="

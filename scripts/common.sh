@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Common Utilities and Helper Functions for EnvSet Deployment Automation Pipeline
+# Common Utilities and Helper Functions for EnvSet Deployment Automation
 # Standard: POSIX Bash compliance, strict error handling capability
 
 set -euo pipefail

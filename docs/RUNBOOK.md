@@ -1,7 +1,7 @@
 # Wolters Kluwer Global Architecture - EnvSet Deployment Runbook
 
 ## Overview
-This Runbook provides operational procedures for engineers managing the automated **EnvSet Deployment Pipeline** using Linux Bash scripts and GitHub Actions.
+This Runbook provides operational procedures for engineers managing the automated **EnvSet Deployment Automation** using Linux Bash scripts.
 
 ---
 
@@ -14,27 +14,17 @@ This Runbook provides operational procedures for engineers managing the automate
 
 ---
 
-## 2. Pipeline Execution Methods
+## 2. Execution Methods
 
 ### Option A: Interactive Bash CLI (Host / Server execution)
-Run the pipeline directly from a terminal on the self-hosted Linux runner or target host:
+Run the automation directly from a terminal on the self-hosted Linux runner or target host:
 
 ```bash
 cd /path/to/configset-deployment-pipeline
-./scripts/run_pipeline.sh
+./scripts/run_all.sh
 ```
 
 **Prompts:**
 1. Target Environment (`1: STG` or `2: PROD`)
 2. ConfigSet / EnvSet Number (e.g. `1947`)
 3. Dry-Run Mode (`y/N`)
-
-### Option B: GitHub Actions Workflow
-1. Navigate to GitHub Repository -> **Actions** tab.
-2. Select **EnvSet Deployment Automation Pipeline**.
-3. Click **Run workflow**.
-4. Fill in inputs:
-   - `environment`: `STG` or `PROD`
-   - `envset_number`: e.g. `1947`
-   - `dry_run`: `true` or `false`
-5. Click **Run workflow**.

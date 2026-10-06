@@ -1,4 +1,4 @@
-# EnvSet Integration Automation Pipeline
+# EnvSet Integration Automation
 
 > Enterprise DevOps Automation Project for Wolters Kluwer Global Architecture Environments (**STG** & **PROD**).
 
@@ -6,7 +6,7 @@
 
 ## 📌 Executive Summary
 
-This repository contains the production-ready automation pipeline for **Environment Fileset (EnvSet / ConfigSet)** deployment lifecycle. It replaces manual execution with an automated, idempotent, resilient Linux Bash & GitHub Actions pipeline equipped with auto-recovery, sequential package transformation, duration metrics calculation, and MS Teams notification integration.
+This repository contains the production-ready automation for **Environment Fileset (EnvSet / ConfigSet)** deployment lifecycle. It replaces manual execution with an automated, idempotent, resilient Linux Bash automation equipped with auto-recovery, sequential package transformation, duration metrics calculation, and MS Teams notification integration.
 
 ---
 
@@ -22,7 +22,6 @@ This repository contains the production-ready automation pipeline for **Environm
 ## 🛠 Tech Stack
 
 - **Scripting & Logic:** Linux Bash (`.sh`)
-- **CI/CD Orchestration:** GitHub Actions (`workflow_dispatch`)
 - **Configuration:** YAML (`config/environments.yaml`)
 - **Target OS & Runner:** Linux (Self-hosted GitHub Runner)
 - **Target User:** `cus01`
@@ -36,7 +35,7 @@ This repository contains the production-ready automation pipeline for **Environm
 Run the master interactive Bash script:
 
 ```bash
-./scripts/run_pipeline.sh
+./scripts/run_all.sh
 ```
 
 **Interactive Prompts:**
@@ -51,12 +50,6 @@ Enter ConfigSet / EnvSet Number (e.g., 1947): 1947
 Enable Dry-Run Mode? (y/N): n
 ```
 
-### Method 2: GitHub Actions Workflow UI
-1. Go to **Actions** -> **EnvSet Deployment Automation Pipeline**.
-2. Click **Run workflow**.
-3. Select `environment` (**STG** or **PROD**), input `envset_number` (e.g. `1947`), and toggle `dry_run`.
-4. Click **Run workflow**.
-
 ---
 
 ## 🧪 Automated Testing
@@ -64,7 +57,7 @@ Enable Dry-Run Mode? (y/N): n
 Execute the test suite to validate all 14 Bash automation scripts in dry-run mode:
 
 ```bash
-./tests/test_pipeline.sh
+./tests/test_all.sh
 ```
 
 ---

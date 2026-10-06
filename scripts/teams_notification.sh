@@ -23,7 +23,7 @@ log_info "Step 13: Preparing Teams Notification (Status: ${STATUS})..."
 if [ "$STATUS" = "SUCCESS" ]; then
     MESSAGE="Environment Fileset Processing\n\nEnvSet: ${ENVSET_NUMBER}\nEnvironment: ${ENVIRONMENT}\n\nStart Time: ${START_TIME}\nEnd Time: ${END_TIME}\n\nTotal Duration:\n${TOTAL_DURATION}\n\nPCI2GA:\nSUCCESS\n\nImport:\nSUCCESS\n\nOverall:\nSUCCESS"
 else
-    MESSAGE="Environment Fileset Processing - FAILED\n\nEnvSet: ${ENVSET_NUMBER}\nEnvironment: ${ENVIRONMENT}\n\nStart Time: ${START_TIME}\nEnd Time: ${END_TIME}\n\nFailed Step:\n${FAILED_STEP:-Pipeline Step}\n\nError:\n${ERROR_MSG:-Execution Error}\n\nSuggested Action:\nVerify server logs and check input package file availability.\n\nOverall:\nFAILED"
+    MESSAGE="Environment Fileset Processing - FAILED\n\nEnvSet: ${ENVSET_NUMBER}\nEnvironment: ${ENVIRONMENT}\n\nStart Time: ${START_TIME}\nEnd Time: ${END_TIME}\n\nFailed Step:\n${FAILED_STEP:-Step}\n\nError:\n${ERROR_MSG:-Execution Error}\n\nSuggested Action:\nVerify server logs and check input package file availability.\n\nOverall:\nFAILED"
 fi
 
 log_info "Formatted Notification Message:"
