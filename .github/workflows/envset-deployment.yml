@@ -11,10 +11,12 @@ on:
         options:
           - STG
           - PROD
+
       envset_number:
         description: "EnvSet / ConfigSet Number (e.g. 1947)"
         required: true
         type: string
+
       dry_run:
         description: "Dry Run Mode (Simulate execution without modifying systems)"
         required: false
@@ -26,108 +28,220 @@ permissions:
   actions: read
 
 env:
-  ENVIRONMENT: "${{ github.event.inputs.environment }}"
-  ENVSET_NUMBER: "${{ github.event.inputs.envset_number }}"
-  DRY_RUN: "${{ github.event.inputs.dry_run }}"
+  ENVIRONMENT: ${{ github.event.inputs.environment }}
+  ENVSET_NUMBER: ${{ github.event.inputs.envset_number }}
+  DRY_RUN: ${{ github.event.inputs.dry_run }}
 
 jobs:
-  envset-deployment:
-    name: "Deploy EnvSet ${{ github.event.inputs.envset_number }} (${{ github.event.inputs.environment }})"
+
+  validation:
+    name: "1 - Validate EnvSet"
     runs-on: [self-hosted, linux]
-    timeout-minutes: 180
 
     steps:
-      - name: "Checkout Automation Repository"
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: "Make Bash Scripts Executable"
-        run: |
-          chmod +x scripts/*.sh
+      - run: chmod +x scripts/*.sh
 
-      - name: "Mask Sensitive Credentials"
-        run: |
+      - run: |
           echo "::add-mask::${{ secrets.SSH_PASSWORD }}"
           echo "::add-mask::${{ secrets.SSH_PRIVATE_KEY }}"
           echo "::add-mask::${{ secrets.TEAMS_WEBHOOK_URL }}"
 
-      - name: "Step 0: Resolve Server Mapping"
+      - name: Resolve Server Mapping
         run: |
           ./scripts/server_mapping.sh "${ENVIRONMENT}" "${ENVSET_NUMBER}"
 
-      - name: "Step 1: Validate EnvSet Directory and Mandatory Packages"
+      - name: Validate EnvSet
         run: |
           ./scripts/validate_envset.sh
 
-      - name: "Step 2: Enable Maintenance Mode"
-        run: |
-          ./scripts/maintenance_mode.sh "enable"
+  maintenance:
+    name: "2 - Enable Maintenance"
+    runs-on: [self-hosted, linux]
+    needs: validation
 
-      - name: "Step 3: Update PCI2GA Version Configuration"
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Enable Maintenance Mode
+        run: |
+          ./scripts/maintenance_mode.sh enable
+
+  config-update:
+    name: "3 - Update PCI2GA Config"
+    runs-on: [self-hosted, linux]
+    needs: maintenance
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Update PCI2GA Configuration
         run: |
           ./scripts/update_pci2ga_config.sh
 
-      - name: "Step 4: Restart PCI2GA Service"
+  restart-pci2ga:
+    name: "4 - Restart PCI2GA"
+    runs-on: [self-hosted, linux]
+    needs: config-update
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Restart PCI2GA
         run: |
           ./scripts/restart_pci2ga.sh
 
-      - name: "Step 5: Process CVC Packages & Record Start Time"
+  process-cvc:
+    name: "5 - Process CVC"
+    runs-on: [self-hosted, linux]
+    needs: restart-pci2ga
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Process CVC Packages
         run: |
           ./scripts/process_cvc.sh
 
-      - name: "Step 6: Monitor CVC Transformation (with Auto-Recovery)"
+  monitor-cvc:
+    name: "6 - Monitor Transformation"
+    runs-on: [self-hosted, linux]
+    needs: process-cvc
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Monitor Transformation
         run: |
           ./scripts/monitor_transformation.sh "CVC" 30
 
-      - name: "Step 7: Process Remaining Packs (ART & ATS)"
+  process-packs:
+    name: "7 - Process ART & ATS"
+    runs-on: [self-hosted, linux]
+    needs: monitor-cvc
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Process Remaining Packs
         run: |
           ./scripts/process_remaining_packs.sh
 
-      - name: "Step 8 & 9: Verify EnvFiles and Organize EnvSet Folder"
+  verify-envfiles:
+    name: "8 - Verify EnvFiles"
+    runs-on: [self-hosted, linux]
+    needs: process-packs
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Verify EnvFiles
         run: |
           ./scripts/verify_envfiles.sh
 
-      - name: "Step 10 & 11: Execute Sequential GA Import & Status Validation"
+  import-packs:
+    name: "9 - Import Packs"
+    runs-on: [self-hosted, linux]
+    needs: verify-envfiles
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Execute Sequential Import
         run: |
           ./scripts/load_import_packs.sh "rest_api"
 
-      - name: "Step 12: Calculate Total Deployment Duration"
-        if: always()
+  calculate-duration:
+    name: "10 - Calculate Duration"
+    runs-on: [self-hosted, linux]
+    needs: import-packs
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Calculate Duration
         run: |
           ./scripts/calculate_duration.sh
 
-      - name: "Step 2 Cleanup: Disable Maintenance Mode"
-        if: always()
-        run: |
-          ./scripts/maintenance_mode.sh "disable" || true
+  disable-maintenance:
+    name: "11 - Disable Maintenance"
+    runs-on: [self-hosted, linux]
+    needs: calculate-duration
+    if: always()
 
-      - name: "Step 13: Post Deployment Summary Notification"
-        if: always()
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Disable Maintenance
+        run: |
+          ./scripts/maintenance_mode.sh disable || true
+
+  notify:
+    name: "12 - Teams Notification"
+    runs-on: [self-hosted, linux]
+    needs: disable-maintenance
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Send Teams Notification
         env:
-          TEAMS_WEBHOOK_URL: "${{ secrets.TEAMS_WEBHOOK_URL }}"
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
         run: |
-          STATUS="${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}"
-          ./scripts/teams_notification.sh "$STATUS"
+          ./scripts/teams_notification.sh "${{ job.status }}"
 
-      - name: "Generate GitHub Step Summary Markdown"
-        if: always()
+  summary:
+    name: "13 - Summary & Artifacts"
+    runs-on: [self-hosted, linux]
+    needs: notify
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate GitHub Summary
         run: |
-          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          cat <<EOF >> "$GITHUB_STEP_SUMMARY"
           ## 🚀 EnvSet Deployment Summary
-          | Parameter | Value |
-          |---|---|
-          | **EnvSet / ConfigSet Number** | `${ENVSET_NUMBER}` |
-          | **Environment** | `${ENVIRONMENT}` |
-          | **Dry-Run Mode** | `${DRY_RUN}` |
 
-          ### 📋 Execution Summary
-          All Linux Bash command execution steps completed successfully.
+          | Parameter | Value |
+          |------------|------------|
+          | EnvSet | ${ENVSET_NUMBER} |
+          | Environment | ${ENVIRONMENT} |
+          | Dry Run | ${DRY_RUN} |
+
+          ### Execution Flow
+
+          ✅ Validation
+
+          ✅ Maintenance Mode
+
+          ✅ PCI2GA Config Update
+
+          ✅ PCI2GA Restart
+
+          ✅ CVC Processing
+
+          ✅ Transformation Monitoring
+
+          ✅ ART / ATS Processing
+
+          ✅ EnvFiles Verification
+
+          ✅ Import Execution
+
+          ✅ Duration Calculation
+
+          ✅ Teams Notification
           EOF
 
-      - name: "Upload Deployment State Artifacts"
-        if: always()
+      - name: Upload Deployment Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: "envset-deployment-artifacts-${{ github.event.inputs.envset_number }}"
+          name: envset-deployment-artifacts-${{ github.event.inputs.envset_number }}
           path: |
             .deployment_state.env
             config/environments.yaml
