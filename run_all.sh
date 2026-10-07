@@ -4,7 +4,7 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/common.sh"
+source "${SCRIPT_DIR}/scripts/common.sh
 
 echo -e "${COLOR_CYAN}"
 echo "========================================================================="
@@ -51,49 +51,49 @@ log_info "  Dry-Run Mode:       ${DRY_RUN}"
 # Cleanup Handler on Failure
 cleanup_on_failure() {
     log_error "Script execution failed! Disabling maintenance mode..."
-    "${SCRIPT_DIR}/maintenance_mode.sh" "disable" || true
+    "${SCRIPT_DIR}/scripts/maintenance_mode.sh" "disable" || true
 }
 trap cleanup_on_failure ERR
 
 # Execute All Steps Sequentially
 log_info "\n>>> STEP 0: Resolving Server Mapping..."
-"${SCRIPT_DIR}/server_mapping.sh" "${ENVIRONMENT}" "${ENVSET_NUMBER}"
+"${SCRIPT_DIR}/scripts/server_mapping.sh" "${ENVIRONMENT}" "${ENVSET_NUMBER}"
 
 log_info "\n>>> STEP 1: Validating EnvSet Directory & Packages..."
-"${SCRIPT_DIR}/validate_envset.sh"
+"${SCRIPT_DIR}/scripts/validate_envset.sh"
 
 log_info "\n>>> STEP 2: Enabling Maintenance Mode..."
-"${SCRIPT_DIR}/maintenance_mode.sh" "enable"
+"${SCRIPT_DIR}/scripts/maintenance_mode.sh" "enable"
 
 log_info "\n>>> STEP 3: Updating PCI2GA Configuration..."
-"${SCRIPT_DIR}/update_pci2ga_config.sh"
+"${SCRIPT_DIR}/scripts/update_pci2ga_config.sh"
 
 log_info "\n>>> STEP 4: Restarting PCI2GA Service..."
-"${SCRIPT_DIR}/restart_pci2ga.sh"
+"${SCRIPT_DIR}/scripts/restart_pci2ga.sh"
 
 log_info "\n>>> STEP 5: Processing CVC Packages & Recording Start Time..."
-"${SCRIPT_DIR}/process_cvc.sh"
+"${SCRIPT_DIR}/scripts/process_cvc.sh"
 
 log_info "\n>>> STEP 6: Monitoring CVC Transformation Log..."
-"${SCRIPT_DIR}/monitor_transformation.sh" "CVC" 30
+"${SCRIPT_DIR}/scripts/monitor_transformation.sh" "CVC" 30
 
 log_info "\n>>> STEP 7: Processing Remaining Packs (ART & ATS)..."
-"${SCRIPT_DIR}/process_remaining_packs.sh"
+"${SCRIPT_DIR}/scripts/process_remaining_packs.sh"
 
 log_info "\n>>> STEP 8 & 9: Verifying EnvFiles & Creating EnvSet Folder..."
-"${SCRIPT_DIR}/verify_envfiles.sh"
+"${SCRIPT_DIR}/scripts/verify_envfiles.sh"
 
 log_info "\n>>> STEP 10 & 11: Executing Sequential GA Import & Status Validation..."
-"${SCRIPT_DIR}/load_import_packs.sh" "rest_api"
+"${SCRIPT_DIR}/scripts/load_import_packs.sh" "rest_api"
 
 log_info "\n>>> STEP 12: Calculating Total Deployment Duration..."
-"${SCRIPT_DIR}/calculate_duration.sh"
+"${SCRIPT_DIR}/scripts/calculate_duration.sh"
 
 log_info "\n>>> STEP 2 Cleanup: Disabling Maintenance Mode..."
-"${SCRIPT_DIR}/maintenance_mode.sh" "disable"
+"${SCRIPT_DIR}/scripts/maintenance_mode.sh" "disable"
 
 log_info "\n>>> STEP 13: Posting Deployment Summary Notification..."
-"${SCRIPT_DIR}/teams_notification.sh" "SUCCESS"
+"${SCRIPT_DIR}/scripts/teams_notification.sh" "SUCCESS"
 
 log_success "\n========================================================================="
 log_success "  EnvSet ${ENVSET_NUMBER} Integration Script Completed SUCCESSFULLY!  "
